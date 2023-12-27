@@ -1,0 +1,420 @@
+openapi: '3.0.0'
+info:
+  version: '1.0.0'
+  title: 'Arch Lab Example API'
+  description: Пример API для первого домашнего задания по курсу Архитектура программных систем
+servers:
+  - url: http://localhost:8080
+    description: Управление маршрутами и поездками
+  - url: http://localhost:8081
+    description: Управление пользователями
+paths:
+  /route/searchByUserId:
+    get:
+      summary: Поиск маршрута по id пользователя
+      parameters:
+      - name: userId
+        description: id пользователя
+        in: query
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Мапшруты в которых состоит пользователь
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/routes'
+        500:
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /route/searchByRouteId:
+    get:
+      summary: Поиск маршрута по id пользователя
+      parameters:
+      - name: routeId
+        description: id маршрута
+        in: query
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Маршрут
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/route'
+        404:
+          description: Нет маршрута с запрашиваемым id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /route:
+    post:
+      summary: Создание маршрута
+      parameters:
+      - name: routeName
+        description: название маршрута
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Маршрут
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/route_id'
+        500:
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /route/addMember:
+    post:
+      summary: Добавление пользователя в маршрут
+      parameters:
+      - name: routeId
+        description: id маршрут
+        in: query
+        required: true
+        schema:
+          type: integer
+      - name: userId
+        description: id пользователя
+        in: query
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Пустое сообщение
+        500:
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /trip:
+    post:
+      summary: Добавление маршрута в поездку
+      parameters:
+      - name: routeId
+        description: id маршрута
+        in: query
+        required: true
+        schema:
+          type: integer
+      - name: text
+        description: текст сообщения
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: id добавлен
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                properties:
+                  id:
+                    type: integer
+        500:
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      summary: Получение сообщений о маршруте
+      parameters:
+      - name: routeId
+        description: id маршрута
+        in: query
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Сообщения о маршруте
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - routeId
+                  - trips
+                properties:
+                  routeId:
+                    type: integer
+                  trips:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - route_id
+                        - id
+                        - trip
+                        - user_id
+                      properties:
+                        route_id:
+                          type: integer
+                        id:
+                          type: integer
+                        trip:
+                          type: string
+                        user_id:
+                          type: integer
+        500:
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  
+  /search:
+    get:
+      summary: (СЕРВИС АВТОРИЗАЦИИ) Поиск пользователей по маске имени и фамилии
+      parameters:
+      - name: first_name
+        description: Имя
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: last_name
+        description: Фамилия
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: The users for the provided masks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/users'
+        404:
+          description: No user found for the provided mask
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /auth:
+    get:
+      summary: (СЕРВИС АВТОРИЗАЦИИ) Проверка аутентификации
+      parameters:
+      - name: token
+        description: Токен пользователя
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: User ID
+          content:
+            application/json:
+              schema:
+               type: object
+               required:
+                 - user_id
+               properties:
+                 user_id:
+                  type: integer
+        401:
+          description: Not authentication
+          content:
+            application/json:
+              schema:
+                type: string
+  /user:
+    put:
+      summary: (СЕРВИС АВТОРИЗАЦИИ) Получение токена для пользователя
+      parameters:
+      - name: login
+        description: Уникальный идентификатор пользователя
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: password
+        description: Пароль пользователя
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Токен пользователя
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - token
+                properties:
+                  token:
+                    type: string
+        500:
+          description: Неожиданная ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: (СЕРВИС АВТОРИЗАЦИИ) Добавление нового пользователя
+      parameters:
+      - name: first_name
+        description: Имя пользователя
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: last_name
+        description: Фамилия пользователя
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: email
+        description: email пользователя
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: title
+        description: Форма обращение к пользователя 
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: login
+        description: login пользователя
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: password
+        description: пароль пользователя
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Идентификатор, добавленного пользователя
+          content:
+            application/json:
+              schema:
+                type: integer
+        404:
+          description: Ошибка добавления пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Неожиданная ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    trip_id:
+      description: Идентификатор сообщенимя пользователя
+      type: integer
+    user_id:
+      description: Уникальный идентификатор пользователя
+      type: integer
+    route_id:
+      description: Идентификатор маршрута
+      type: integer
+    users:
+      type: array
+      items:
+        $ref: '#/components/schemas/user'
+    routes:
+      type: array
+      items:
+        $ref: '#/components/schemas/route'
+    route:
+      type: object
+      required:
+        - creator_id
+        - id
+        - name
+      properties:
+        id: 
+          $ref: '#/components/schemas/route_id'
+        creator_id:
+          $ref: '#/components/schemas/user_id'
+        name:
+          description: Название маршрута
+          type: string
+    user:
+      type: object
+      required:
+        - id
+        - first_name
+        - last_name
+        - email
+        - title
+        - login
+        - password
+      properties:
+        id:
+          $ref: '#/components/schemas/user_id'
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+        title:
+          type: string
+        login:
+          type: string
+        password:
+          type: string
+    Error:
+      type: object
+      required:
+        - trip
+      properties:
+        trip:
+          description: Сообщение об ошибке
+          type: string
+  securitySchemes:
+      basicAuth:     
+        type: http
+        scheme: basic
+security:
+  - basicAuth: []
